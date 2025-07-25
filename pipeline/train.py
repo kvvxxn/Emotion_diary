@@ -2,6 +2,7 @@ import os
 import sys
 import torch
 import copy
+import numpy as np
 import torch.optim as optim
 import matplotlib.pyplot as plt
 
@@ -87,16 +88,16 @@ def train(model, criterion, dataloader, optimizer, device):
         loss = criterion(outputs, targets)
 
         # 3. Backpropagation
-        # Loss / weight 편미분 값으로, Mini-batch마다 초기화 하지 않으면 누적됨.
-        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        # Gradient 초기화
+        optimizer.zero_grad()
 
         train_loss += loss.item()
 
         idx = torch.argmax(outputs, dim = 1)
         mask = (idx == targets).float()
-        train_acc += 100 * torch.sum(mask).item() / targets.size(0)
+        train_acc += 100 * (torch.sum(mask).item() / targets.size(0))
 
     # 전체 Batch에 대한 평균값을 계산
     train_loss /= (i + 1)
@@ -134,7 +135,7 @@ def val(model, criterion, dataloader, device):
 
             idx = torch.argmax(outputs, dim = 1)
             mask = (idx == targets).float()
-            val_acc += 100 * torch.sum(mask).item() / targets.size(0)
+            val_acc += 100 * (torch.sum(mask).item() / targets.size(0))
 
         # 전체 Batch에 대한 평균값을 계산
         val_loss /= (i + 1)
@@ -178,21 +179,21 @@ def train_val(train_loader, val_loader, device):
             
             # 가장 좋은 성능의 Loss, Model, Hyperparameter를 저장
             best_loss = float('inf')
-            best_hyperparam = None # tuple: (lr, wd, epoch
+            best_hyperparam = None # tuple: (lr, wd, epoch)
             best_model = None
 
-            for epoch in range(max(num_epoch)):
+            for epoch in range(num_epoch):
                 # learning_rate, Weight_dacay, Epoch에 맞춰 모델 학습
                 train_loss, train_acc = train(vit, cross_entropy_loss, train_loader, optimizer, device)
 
                 # learning_rate, Weight_dacay, Epoch에 따른 모델의 성능 평가
                 val_loss, val_acc = val(vit, cross_entropy_loss, val_loader, device)
 
-                train_loss_per_epoch.append(train_loss)
-                train_acc_per_epoch.append(train_acc)
+                train_loss_per_epoch.append(train_loss) # list
+                train_acc_per_epoch.append(train_acc) # list
 
-                val_loss_per_epoch.append(val_loss)
-                val_acc_per_epoch.append(val_acc)
+                val_loss_per_epoch.append(val_loss) # list
+                val_acc_per_epoch.append(val_acc) # list
 
                 if (best_loss > val_loss):
                     best_loss = val_loss
@@ -225,12 +226,14 @@ def train_val(train_loader, val_loader, device):
 
     print("----------Minimum loss in each Hyperparameter----------")
     for key in train_loss_hyper:
-        print(f'Training loss in ({key[0], key[1]}): {train_loss_hyper[key]}')
-        print(f'Validation loss in ({key[0], key[1]}): {val_loss_hyper[key]}')
+        print(f'Training loss in ({key[0], key[1]}): {np.min(train_loss_hyper[key])}')
+        print(f'Validation loss in ({key[0], key[1]}): {np.min(val_loss_hyper[key])}')
         print()
 
     print("----------Maximum accuracy in each Hyperparameter----------")
     for key in train_acc_hyper:
-        print(f'Training accuracy in ({key[0], key[1]}): {train_acc_hyper[key]}')
-        print(f'Validation accuracy in ({key[0], key[1]}): {val_acc_hyper[key]}')
+        print(f'Training accuracy in ({key[0], key[1]}): {np.max(train_acc_hyper[key])}')
+        print(f'Validation accuracy in ({key[0], key[1]}): {np.max(val_acc_hyper[key])}')
         print()
+
+    return best_hyperparam

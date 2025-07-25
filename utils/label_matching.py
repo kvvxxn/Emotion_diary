@@ -6,7 +6,7 @@ raw_label = ['amusement', 'awe', 'contentment', 'excitement',
             'anger', 'disgust', 'fear', 'sadness']
 
 # Cross-Entropy loss를 사용하려면 class index를 가져야 함
-scores = torch.tensor([ 0, 2, 6, 1, 3, 5, 4, 1])
+scores = torch.tensor([0, 2, 6, 1, 3, 5, 4, 1])
     
 def label_to_score(v):
     # Label Tensor를 입력받아 7개 class에 대한 점수 형식으로 반환
