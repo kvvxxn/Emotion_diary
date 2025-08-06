@@ -12,7 +12,8 @@ emotion_list = ['행복', '슬픔', '놀람', '분노', '공포', '혐오', '중
 MAX_LEN = 128
 BATCH_SIZE = 32
 EPOCHS = 20
-LEARNING_RATE = 2e-5
+LEARNING_RATE = [1e-4, 5e-5, 2e-5]
+WEIGHT_DECAY = [1e-2, 1e-3, 5e-4]
 
-#MODEL_SAVE_PATH = "korean_emotion_mbert.pt"
-MODEL_SAVE_PATH = "/content/drive/MyDrive/Project/KOR/model/korean_emotion_mbert2.pt"
+#MODEL_SAVE_PATH = ""
+MODEL_SAVE_PATH = f"/content/drive/MyDrive/Project/KOR/model/"
