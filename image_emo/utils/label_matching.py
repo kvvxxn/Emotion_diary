@@ -29,10 +29,9 @@ label_to_emotion = {
     3: 'Anger',
     4: 'Fear',
     5: 'Disgust',
-    6: 'Sadness'
+    6: 'Neutral'
 }
 
-    
 def label_to_score(v):
     # Label Tensor를 입력받아 7개 class에 대한 점수 형식으로 반환
     answer = scores[v]

@@ -13,15 +13,46 @@ from image_emo.models.vit_model import vit_model
 from image_emo.config.config import original_num_emotion_classes, data_root
 from image_emo.utils.label_matching import label_to_score
 
+# Device 설정
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
 # Image Model 불러오기
 image_model_path = os.path.join('models', 'image_best_model.pth')
 vit, cross_entropy_loss = vit_model()
 vit.load_dict(torch.load(image_model_path), required_grad = False)
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+# Image Dataset 불러오기
+img_train_dataset = EmoSet(
+    data_root=data_root,
+    num_emotion_classes=original_num_emotion_classes,
+    phase='train',
+)
+img_train_loader = DataLoader(img_train_dataset, batch_size=16, shuffle=True)
 
-# TODO: Text Model 불러오기 / 변수명: text_model 또는 bert
+# Validation Dataset
+img_val_dataset = EmoSet(
+    data_root=data_root,
+    num_emotion_classes=original_num_emotion_classes,
+    phase='val',
+)
+img_val_loader = DataLoader(img_val_dataset, batch_size=16, shuffle=False)
 
+# Test Dataset
+img_test_dataset = EmoSet(
+    data_root=data_root,
+    num_emotion_classes=original_num_emotion_classes,
+    phase='test',
+)
+img_test_loader = DataLoader(img_test_dataset, batch_size=16, shuffle=False)
+
+
+######################################################
+# TODO: Text Model 불러오기 / 변수명: 또는 bert
+
+######################################################
+
+
+# 두 모델에서의 벡터 합치기 위한 2 Layer MLP 정의
 class MLP(nn.Module):
     def __init__(self, hidden_dim: int, num_classes: int, dropout: float = 0.5, batchnorm: bool = False):
         super().__init__()
@@ -46,50 +77,32 @@ class MLP(nn.Module):
 
         return output
     
-img_train_dataset = EmoSet(
-    data_root=data_root,
-    num_emotion_classes=original_num_emotion_classes,
-    phase='train',
-)
-img_train_loader = DataLoader(img_train_dataset, batch_size=16, shuffle=True)
 
-# Validation Dataset
-img_val_dataset = EmoSet(
-    data_root=data_root,
-    num_emotion_classes=original_num_emotion_classes,
-    phase='val',
-)
-img_val_loader = DataLoader(img_val_dataset, batch_size=16, shuffle=False)
-
-# Test Dataset
-img_test_dataset = EmoSet(
-    data_root=data_root,
-    num_emotion_classes=original_num_emotion_classes,
-    phase='test',
-)
-img_test_loader = DataLoader(img_test_dataset, batch_size=16, shuffle=False)
-    
 # Image Dataset의 Label에 맞는 Text data를 임의로 가져옴
+# Train / Val / Test에 맞춰서 엑셀 파일 분리 해놓음
+# Phase = 'train' / 'val' / 'test'에 따라 각 엑셀 파일에서 image_label에 맞는 label의 text를 무작위로 가져올 수 있도록 해야함
+# 엑셀 파일: 한글 감정 표현 -> 영어로 바꿔놓음
+# image_label은 16개의 Element로 이루어진 벡터이며, 각 Element의 값은 아래 label_to_emotion에서의 숫자값 (0 ~ 6)과 동일
 def make_text_dataset(image_label, phase):
     """
     image_data.shape (16, )
+    label_to_emotion = {
+        0: 'Joy',
+        1: 'Sadness',
+        2: 'Surprise',
+        3: 'Anger',
+        4: 'Fear',
+        5: 'Disgust',
+        6: 'Neutral'
+    }
     """
-    # Training dataset
     
 
-
-    vit.eval()
-
-    img_vec = vit()
-    text_vec = bert()
-
-    fusion_mlp = MLP()
-
-    # Train_loader에 text, img 모두 포함되어야 함
     return text_data
 
     
-
+# Optuna: 최적의 Hyperparameter를 자동으로 찾아주는 API
+# 2 Layer 같이 얕은 모델에선 그리 느리지않아서 주로 사용한다고 함. 
 def objective(trial, train_loader, val_loader):
     hidden_dim   = trial.suggest_categorical("hidden_dim", [16, 32, 64, 128])
     dropout      = trial.suggest_float("dropout", 0.0, 0.5)
