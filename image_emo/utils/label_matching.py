@@ -6,8 +6,32 @@ raw_label = ['amusement', 'awe', 'contentment', 'excitement',
             'anger', 'disgust', 'fear', 'sadness']
 
 # Cross-Entropy loss를 사용하려면 class index를 가져야 함
-scores = torch.tensor([0, 2, 6, 1, 3, 5, 4, 1])
-    
+"""
+0 ~ 6까지의 label은 아래와 같다.
+    - Joy, Sadness, Suprise, Anger, Fear, Disgust, Neutral
+
+EmoSet의 원래 8개의 감정 Label을 아래와 같이 7개의 감정 Label로 변환하였다.
+    - amusement -> Joy
+    - awe -> Surprise
+    - contentment -> Neutral
+    - excitement -> Joy
+    - anger -> Anger
+    - disgust -> Disgust
+    - fear -> Fear
+    - sadness -> Sadness  
+"""
+scores = torch.tensor([0, 2, 6, 0, 3, 5, 4, 1])
+
+label_to_emotion = {
+    0: 'Joy',
+    1: 'Sadness',
+    2: 'Surprise',
+    3: 'Anger',
+    4: 'Fear',
+    5: 'Disgust',
+    6: 'Neutral'
+}
+
 def label_to_score(v):
     # Label Tensor를 입력받아 7개 class에 대한 점수 형식으로 반환
     answer = scores[v]
