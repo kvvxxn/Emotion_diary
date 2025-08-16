@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from config.config import model_num_emotion_classes
+from image_emo.config.config import model_num_emotion_classes
 
 def vit_model():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

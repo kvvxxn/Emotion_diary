@@ -32,7 +32,7 @@ label_to_emotion = {
     6: 'Neutral'
 }
 
-def label_to_score(v):
+def fix_label(v):
     # Label Tensor를 입력받아 7개 class에 대한 점수 형식으로 반환
     answer = scores[v]
     return answer

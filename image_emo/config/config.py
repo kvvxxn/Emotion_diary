@@ -1,8 +1,8 @@
 import os
 
 # root 경로 설정
-data_root = os.path.join(os.path.dirname(__file__), '..', 'data', 'EmoSet-118K')
-data_root = os.path.abspath(data_root) # 절대 경로로 변경
+DATA_ROOT = os.path.join(os.path.dirname(__file__), '..', 'data', 'EmoSet-118K')
+DATA_ROOT = os.path.abspath(DATA_ROOT) # 절대 경로로 변경
 
 # 원래 EmoSet의 Class 개수
 original_num_emotion_classes = 8

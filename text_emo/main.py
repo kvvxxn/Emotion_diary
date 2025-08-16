@@ -1,14 +1,22 @@
 import pandas as pd
 import numpy as np
 import torch
+import os
+import sys
 from torch.utils.data import DataLoader
 from transformers import BertTokenizer
+from sklearn.model_selection import train_test_split
+
+# text_emo 폴더에서 불러오기
 from config.config import *
-from datasets.emotion_dataset import EmotionDataset
-from models.emotion_classifier import EmotionClassifier
 from pipeline.train import train_epoch, evaluate
 from pipeline.test import test
-from sklearn.model_selection import train_test_split
+
+
+# 절대 경로 설정 -> TEAM_PROJECT 폴더로 이동
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from shared.datasets.text_emoset import EmotionDataset
+from shared.models.emotion_classifier import EmotionClassifier
 
 def set_seed(seed=42):
     np.random.seed(seed)

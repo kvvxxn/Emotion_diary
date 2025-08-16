@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 
 # 절대 경로 설정
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from models.vit_model import vit_model
-from utils.label_matching import label_to_score
+from shared.models.vit_model import vit_model
+from utils.label_matching import fix_label
 from config.config import num_epoch, learning_rate, weight_decay
 
 def draw_loss_graph(learning_rate, weight_decay, train_loss_hyper, val_loss_hyper):
@@ -79,7 +79,7 @@ def train(model, criterion, dataloader, optimizer, device):
         labels = data['emotion_label_idx'].to(device)
 
         # Batch Image에 맞는 7 Class Score Matrix
-        targets = label_to_score(labels).to(device) # (16, )
+        targets = fix_label(labels).to(device) # (16, )
 
         # 1. Forward - logits 형태 반환
         outputs = model(img) # (16, 7)
@@ -123,7 +123,7 @@ def val(model, criterion, dataloader, device):
             labels = data['emotion_label_idx'].to(device)
 
             # Batch Image에 맞는 7 Class Score Matrix
-            targets = label_to_score(labels).to(device) # (16, )
+            targets = fix_label(labels).to(device) # (16, )
 
             # 1. Forward - logits 형태 반환
             outputs = model(img) # (16, 7)

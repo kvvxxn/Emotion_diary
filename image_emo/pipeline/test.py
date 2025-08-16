@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import torchvision.transforms.functional as TF
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from models.vit_model import vit_model
-from utils.label_matching import label_to_score
+from shared.models.vit_model import vit_model
+from utils.label_matching import fix_label
 
 
 def test(dataloader, device, visualize=False, num_visualize=6):
@@ -32,7 +32,7 @@ def test(dataloader, device, visualize=False, num_visualize=6):
             labels = data['emotion_label_idx'].to(device)
 
             # Batch Image에 맞는 7 Class Score Matrix
-            targets = label_to_score(labels).to(device) # (16, )
+            targets = fix_label(labels).to(device) # (16, )
 
             # 1. Forward - logits 형태 반환
             outputs = vit(img) # (16, 7)

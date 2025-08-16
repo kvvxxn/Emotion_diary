@@ -1,12 +1,18 @@
+import os
+import sys
 import torch
 import random
 import numpy as np
 from torch.utils.data import DataLoader
 
-from datasets.emoset import EmoSet
+# image_emo 폴더에서 불러오기
 from pipeline.train import train_val
 from pipeline.test import test
-from config.config import data_root, original_num_emotion_classes
+from config.config import DATA_ROOT, original_num_emotion_classes
+
+# 절대 경로 설정 -> TEAM_PROJECT 폴더로 이동
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from shared.datasets.image_emoset import EmoSet
 
 def set_seed(seed=42):
     # Random seed 설정
@@ -27,7 +33,7 @@ def main():
 
     # Training dataset
     train_dataset = EmoSet(
-        data_root=data_root,
+        data_root=DATA_ROOT,
         num_emotion_classes=original_num_emotion_classes,
         phase='train',
     )
@@ -35,7 +41,7 @@ def main():
 
     # Validation Dataset
     val_dataset = EmoSet(
-        data_root=data_root,
+        data_root=DATA_ROOT,
         num_emotion_classes=original_num_emotion_classes,
         phase='val',
     )
@@ -56,7 +62,7 @@ def main():
 
     # Test Dataset
     test_dataset = EmoSet(
-        data_root=data_root,
+        data_root=DATA_ROOT,
         num_emotion_classes=original_num_emotion_classes,
         phase='test',
     )
