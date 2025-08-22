@@ -39,22 +39,39 @@ def main():
     best_config = None
     best_model_path = None
 
-    # 1. 데이터 로드 & 분할 (epoch마다 중복하지 않게 여기서 한 번만 수행)
-    df = pd.read_excel(file_path)
-    texts = df['Sentence'].tolist()
-    labels = df['Emotion'].tolist()
-    emotion_to_idx = {emo: i for i, emo in enumerate(emotion_list)}
-    label_vectors = [label_to_vec(l, emotion_to_idx) for l in labels]
-    train_texts, val_texts, train_labels, val_labels = train_test_split(
-        texts, label_vectors, test_size=0.1, random_state=42
-    )
-    tokenizer = BertTokenizer.from_pretrained("bert-base-multilingual-cased")
-    train_dataset = EmotionDataset(train_texts, train_labels, tokenizer, max_len=MAX_LEN)
-    val_dataset = EmotionDataset(val_texts, val_labels, tokenizer, max_len=MAX_LEN)
-    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE)
+    # 1. 데이터 로드
+    train_df = pd.read_excel(os.path.join(DATA_DIR, 'train_text.xlsx'))
+    val_df = pd.read_excel(os.path.join(DATA_DIR, 'val_text.xlsx'))
+    test_df = pd.read_excel(os.path.join(DATA_DIR, 'test_text.xlsx'))
+    
+    # Ensure 'Sentence' column is string type
+    train_df['Sentence'] = train_df['Sentence'].astype(str)
+    val_df['Sentence'] = val_df['Sentence'].astype(str)
+    test_df['Sentence'] = test_df['Sentence'].astype(str)
 
-    # 2. 하이퍼파라미터 Sweep
+    train_texts = train_df['Sentence'].tolist()
+    train_labels = train_df['Emotion'].tolist()
+    val_texts = val_df['Sentence'].tolist()
+    val_labels = val_df['Emotion'].tolist()
+    test_texts = test_df['Sentence'].tolist()
+    test_labels = test_df['Emotion'].tolist()
+    
+    # 2. 라벨 벡터화
+    train_label_vectors = [label_to_vec(l, emotion_to_idx) for l in train_labels]
+    val_label_vectors = [label_to_vec(l, emotion_to_idx) for l in val_labels]
+    test_label_vectors = [label_to_vec(l, emotion_to_idx) for l in test_labels]
+
+    # 3. Dataset & DataLoader
+    tokenizer = BertTokenizer.from_pretrained("bert-base-multilingual-cased")
+    train_dataset = EmotionDataset(train_texts, train_label_vectors, tokenizer, max_len=MAX_LEN)
+    val_dataset = EmotionDataset(val_texts, val_label_vectors, tokenizer, max_len=MAX_LEN)
+    test_dataset = EmotionDataset(test_texts, test_label_vectors, tokenizer, max_len=MAX_LEN)
+
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+
+    # 4. 하이퍼파라미터 Sweep
     for lr in LEARNING_RATE:
         for wd in WEIGHT_DECAY:
             print(f"\n[Train] lr={lr} / weight_decay={wd}")
@@ -95,11 +112,11 @@ def main():
     print(f"\n[Best] lr={best_config[0]}, weight_decay={best_config[1]}, val_loss={best_val_loss:.4f}")
     print(f"최적 성능 모델 경로: {best_model_path}")
 
-    # 3. 최적 모델 다시 불러서 최종 test 평가
+    # 5. 최적 모델 다시 불러서 최종 test 평가
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = EmotionClassifier(num_labels=len(emotion_list)).to(device)
     model.load_state_dict(torch.load(best_model_path))
-    test_acc = test(model, val_loader, device)
+    test_acc = test(model, test_loader, device)
     print(f"Best Val/Test Accuracy: {test_acc:.4f}")
 
     # 필요하면 최종 model_path를 config에서 사용하던 공식 경로로 복사/저장

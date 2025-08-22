@@ -3,10 +3,15 @@ import os
 # 데이터 경로
 #data_root = os.path.join("data", "한국어 감정 정보가 포함된 단발성 대화 데이터셋")
 #data_file = os.path.join(data_root, "한국어_단발성_대화_데이터셋.xlsx")
-file_path = "/content/drive/MyDrive/Project/KOR/data/한국어 감정 정보가 포함된 단발성 대화 데이터셋/한국어_단발성_대화_데이터셋.xlsx"
+#file_path = "/content/drive/MyDrive/Project/KOR/data/한국어 감정 정보가 포함된 단발성 대화 데이터셋/한국어_단발성_대화_데이터셋.xlsx"
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, '..'))
+DATA_DIR = os.path.join(PROJECT_ROOT, 'data', 'text_data')
 
 # 감정 라벨
 emotion_list = ['행복', '슬픔', '놀람', '분노', '공포', '혐오', '중립']
+emotion_to_idx = {emo: i for i, emo in enumerate(emotion_list)}
 
 # 하이퍼파라미터
 MAX_LEN = 128

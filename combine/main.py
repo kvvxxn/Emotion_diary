@@ -30,7 +30,7 @@ IMAGE_BEST_MODEL_PATH = os.path.join(SHARED_ROOT, 'best_model', 'image_best_mode
 TRAIN_TEXT_PATH = os.path.join(DATA_ROOT, 'text_data', 'train_text.xlsx')
 VAL_TEXT_PATH = os.path.join(DATA_ROOT, 'text_data', 'val_text.xlsx')
 TEST_TEXT_PATH = os.path.join(DATA_ROOT, 'text_data', 'test_text.xlsx')
-TEXT_BEST_MODEL_PATH = os.path.join(SHARED_ROOT, 'best_model', 'text_best_model.pth')
+TEXT_BEST_MODEL_PATH = os.path.join(SHARED_ROOT, 'best_model', 'text_best_model.pt')
 
 # Device 설정
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -67,6 +67,10 @@ img_test_loader = DataLoader(img_test_dataset, batch_size=16, shuffle=False)
 
 ######################################################
 # TODO: Text Model 불러오기 / 변수명: 또는 bert
+bert = EmotionClassifier()
+bert.load_state_dict(torch.load(TEXT_BEST_MODEL_PATH))
+bert.to(device)
+bert.eval()
 
 ######################################################
 

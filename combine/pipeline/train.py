@@ -16,7 +16,12 @@ from image_emo.utils.label_matching import fix_label
 # image_label은 16개의 Element로 이루어진 벡터이며, 각 Element의 값은 아래 label_to_emotion에서의 숫자값 (0 ~ 6)과 동일
 def make_text_dataset(image_label, phase):
     """
-    image_data.shape (16, )
+    image_label: tensor of shape (batch_size,) containing emotion class indices (0~6)
+    phase: 'train', 'val', or 'test'에 따라 다른 엑셀 파일에서 텍스트 추출
+    
+    반환: text_data (list of sentences) - 배치 사이즈에 맞춰 라벨에 맞는 문장 리스트에서 랜덤 선택 후 리스트 반환
+    """
+    # 1. 감정 인덱스와 영어 감정명 매핑
     label_to_emotion = {
         0: 'Joy',
         1: 'Sadness',
@@ -26,9 +31,35 @@ def make_text_dataset(image_label, phase):
         5: 'Disgust',
         6: 'Neutral'
     }
-    """
     
-
+    # 2. phase에 따른 파일 경로 지정
+    if phase == 'train':
+        text_file = os.path.join(DATA_ROOT, 'text_data', 'train_text.xlsx')
+    elif phase == 'val':
+        text_file = os.path.join(DATA_ROOT, 'text_data', 'val_text.xlsx')
+    elif phase == 'test':
+        text_file = os.path.join(DATA_ROOT, 'text_data', 'test_text.xlsx')
+    else:
+        raise ValueError("phase should be one of ['train', 'val', 'test']")
+    
+    # 3. 엑셀 파일에서 텍스트 데이터 불러오기
+    df = pd.read_excel(text_file)
+    
+    # 4. 감정별 문장들을 딕셔너리로 묶기
+    emotion_to_sentences = {}
+    for emotion_name in label_to_emotion.values():
+        emotion_to_sentences[emotion_name] = df[df['Emotion'] == emotion_name]['Sentence'].tolist()
+    
+    # 5. image_label에 따른 문장 무작위 선택
+    text_data = []
+    for label in image_label.cpu().numpy():
+        emotion_name = label_to_emotion[label]
+        sentences = emotion_to_sentences.get(emotion_name, [""])  # 없으면 빈문장 대체
+        if len(sentences) == 0:
+            text_data.append("")  # 문장이 없는 경우 빈문장
+        else:
+            text_data.append(random.choice(sentences))
+    
     return text_data
 
 
