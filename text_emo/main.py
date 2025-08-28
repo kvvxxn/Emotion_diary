@@ -29,6 +29,12 @@ def label_to_vec(label, emotion_to_idx):
         vec[emotion_to_idx[label]] = 1.0
     return vec
 
+def split_data(filepath, train_ratio=0.7, val_ratio=0.15, test_ratio=0.15, seed=42):
+    df = pd.read_excel(filepath)
+    train, temp = train_test_split(df, test_size=(1 - train_ratio), random_state=seed)
+    val, test = train_test_split(temp, test_size=test_ratio/(test_ratio+val_ratio), random_state=seed)
+    return train, val, test
+
 def main():
 
     set_seed(42)
@@ -40,9 +46,7 @@ def main():
     best_model_path = None
 
     # 1. 데이터 로드
-    train_df = pd.read_excel(os.path.join(DATA_DIR, 'train_text.xlsx'))
-    val_df = pd.read_excel(os.path.join(DATA_DIR, 'val_text.xlsx'))
-    test_df = pd.read_excel(os.path.join(DATA_DIR, 'test_text.xlsx'))
+    train_df, val_df, test_df = split_data(os.path.join(DATA_DIR, '한국어_단발성_대화_데이터셋.xlsx'))
     
     # Ensure 'Sentence' column is string type
     train_df['Sentence'] = train_df['Sentence'].astype(str)
