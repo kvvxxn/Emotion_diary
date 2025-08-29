@@ -1,13 +1,17 @@
 import os
 import sys
 import torch
+import numpy
 import optuna
+import random 
+import pandas as pd
 from torch.utils.data import DataLoader
 
 # 절대 경로 설정 -> TEAM_PROJECT 폴더로 이동
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # Image_emo 폴더에서 불러오기 - Iamge model setting
 from image_emo.utils.label_matching import fix_label
+from shared.path import DATA_ROOT
 
 # Image Dataset의 Label에 맞는 Text data를 임의로 가져옴
 # Train / Val / Test에 맞춰서 엑셀 파일 분리 해놓음

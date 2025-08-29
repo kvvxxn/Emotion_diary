@@ -14,6 +14,8 @@ from config.config import DATA_ROOT, original_num_emotion_classes
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from shared.datasets.image_emoset import EmoSet
 
+IMAGE_PATH = os.path.join(DATA_ROOT, 'image_data', 'EmoSet-118K')
+
 def set_seed(seed=42):
     # Random seed 설정
     random.seed(seed)
@@ -33,7 +35,7 @@ def main():
 
     # Training dataset
     train_dataset = EmoSet(
-        data_root=DATA_ROOT,
+        data_root=IMAGE_PATH,
         num_emotion_classes=original_num_emotion_classes,
         phase='train',
     )
@@ -41,7 +43,7 @@ def main():
 
     # Validation Dataset
     val_dataset = EmoSet(
-        data_root=DATA_ROOT,
+        data_root=IMAGE_PATH,
         num_emotion_classes=original_num_emotion_classes,
         phase='val',
     )
@@ -62,7 +64,7 @@ def main():
 
     # Test Dataset
     test_dataset = EmoSet(
-        data_root=DATA_ROOT,
+        data_root=IMAGE_PATH,
         num_emotion_classes=original_num_emotion_classes,
         phase='test',
     )

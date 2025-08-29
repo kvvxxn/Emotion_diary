@@ -4,6 +4,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from pipeline.train import train
+from pipeline.test import test
 
 # 절대 경로 설정 -> TEAM_PROJECT 폴더로 이동
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -15,22 +16,22 @@ from shared.datasets.image_emoset import EmoSet
 from shared.models.fusion_head import FusionMLP
 from shared.models.vit_model import vit_model
 from shared.models.text_emotion_classifier import EmotionClassifier
+from shared.path import DATA_ROOT
 
 # shared/data 경로 설정
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(CURRENT_DIR)  # combine 상위
-DATA_ROOT = os.path.join(PROJECT_ROOT, 'data')
 SHARED_ROOT = os.path.join(PROJECT_ROOT, 'shared')
 
 # Image Data, best model 경로 설정
 IMAGE_DATA_ROOT = os.path.join(DATA_ROOT,  'image_data', 'EmoSet-118K')
 IMAGE_BEST_MODEL_PATH = os.path.join(SHARED_ROOT, 'best_model', 'image_best_model.pth')
+TEXT_BEST_MODEL_PATH = os.path.join(SHARED_ROOT, 'best_model', 'text_best_model.pt')
 
 # Text Data 경로 설정
 TRAIN_TEXT_PATH = os.path.join(DATA_ROOT, 'text_data', 'train_text.xlsx')
 VAL_TEXT_PATH = os.path.join(DATA_ROOT, 'text_data', 'val_text.xlsx')
 TEST_TEXT_PATH = os.path.join(DATA_ROOT, 'text_data', 'test_text.xlsx')
-TEXT_BEST_MODEL_PATH = os.path.join(SHARED_ROOT, 'best_model', 'text_best_model.pt')
 
 # Device 설정
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -71,7 +72,6 @@ bert = EmotionClassifier()
 bert.load_state_dict(torch.load(TEXT_BEST_MODEL_PATH))
 bert.to(device)
 bert.eval()
-
 ######################################################
 
 
