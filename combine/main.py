@@ -16,12 +16,7 @@ from shared.datasets.image_emoset import EmoSet
 from shared.models.fusion_head import FusionMLP
 from shared.models.vit_model import vit_model
 from shared.models.text_emotion_classifier import EmotionClassifier
-from shared.path import DATA_ROOT
-
-# shared/data 경로 설정
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.dirname(CURRENT_DIR)  # combine 상위
-SHARED_ROOT = os.path.join(PROJECT_ROOT, 'shared')
+from shared.path import DATA_ROOT, SHARED_ROOT
 
 # Image Data, best model 경로 설정
 IMAGE_DATA_ROOT = os.path.join(DATA_ROOT,  'image_data', 'EmoSet-118K')
@@ -74,6 +69,7 @@ bert.to(device)
 bert.eval()
 ######################################################
 
+# Text data는 Image batch에 맞게 Train/test 시점에 불러옴.
 
 # FusionMLP를 Training + Validation
 train(img_train_loader, img_val_loader, vit, bert, cross_entropy_loss, device)

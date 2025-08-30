@@ -8,11 +8,13 @@ from torch.utils.data import DataLoader
 # image_emo 폴더에서 불러오기
 from pipeline.train import train_val
 from pipeline.test import test
-from config.config import DATA_ROOT, original_num_emotion_classes
+from config.config import original_num_emotion_classes
+
 
 # 절대 경로 설정 -> TEAM_PROJECT 폴더로 이동
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from shared.datasets.image_emoset import EmoSet
+from shared.path import DATA_ROOT
 
 IMAGE_PATH = os.path.join(DATA_ROOT, 'image_data', 'EmoSet-118K')
 

@@ -6,7 +6,7 @@ import json
 # Pillow
 from PIL import Image
 
-# data_root = 'EmoSet-118K'
+# data_root = 'data/image_data/EmoSet-118K'
 
 class EmoSet(Dataset):
     def __init__(self,

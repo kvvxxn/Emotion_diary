@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 # 두 모델에서의 벡터 합치기 위한 2 Layer MLP 정의
+# BN -> FC -> BN -> ReLU -> FC
 class FusionMLP(nn.Module):
     def __init__(self, hidden_dim: int, num_classes: int, dropout: float = 0.5, batchnorm: bool = False):
         super().__init__()
