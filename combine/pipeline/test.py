@@ -55,16 +55,15 @@ def make_text_dataset(image_label, phase):
     
     return text_data
 
-def test(img_test_loader, img_model, text_model, best_params_path=None, fc_model_class=None, num_classes=7):
+def test(img_test_loader, mlp, img_model, text_model, num_classes=7):
     """
     Test function for the combined model
     
     Args:
         img_test_loader: Test data loader
+        mlp: Pre-trained fusion model (FusionMLP)
         img_model: Pre-trained image model
         text_model: Pre-trained text model
-        best_params_path: Path to .pt/.pth file containing best hyperparameters
-        fc_model_class: Fusion model class (e.g., FusionMLP)
         num_classes: Number of emotion classes
     """
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -75,23 +74,9 @@ def test(img_test_loader, img_model, text_model, best_params_path=None, fc_model
     # 모델들을 평가 모드로 설정
     img_model.eval()
     text_model.eval()
+    mlp.eval()
     
-    # Best hyperparameters를 로드하여 fusion model 생성
-    if best_params_path is not None and fc_model_class is not None:
-        best_params = torch.load(best_params_path)
-        print(f"Using best hyperparameters from {best_params_path}: {best_params}")
-        
-        # Best hyperparameters로 fusion model 생성
-        fc_model = fc_model_class(
-            hidden_dim=best_params['hidden_dim'],
-            num_classes=num_classes,
-            dropout=best_params['dropout'],
-            batchnorm=best_params['batchnorm']
-        ).to(device)
-        fc_model.eval()
-    else:
-        fc_model = None
-        print("No best_params_path provided, using only image model for testing")
+    print("Using fusion model for testing")
     
     total_correct = 0
     total_samples = 0
@@ -121,13 +106,9 @@ def test(img_test_loader, img_model, text_model, best_params_path=None, fc_model
             img_output = img_model(img_data)
             text_output = text_model(input_ids, attention_mask)
             
-            if fc_model is not None:
-                # Fusion model 사용
-                outputs = fc_model.forward(img_output, text_output)
-                pred_cls = torch.argmax(outputs, dim=1)
-            else:
-                # 이미지 모델 결과만 사용
-                pred_cls = torch.argmax(img_output, dim=1)
+            # Fusion model 사용
+            outputs = mlp.forward(img_output, text_output)
+            pred_cls = torch.argmax(outputs, dim=1)
             
             # 예측 결과 계산
             mask = (pred_cls == targets).float()

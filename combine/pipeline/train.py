@@ -284,7 +284,6 @@ def train(
             device,
             num_classes,
             epochs,
-            best_acc
         ),
         n_trials=n_trials
     )
@@ -305,5 +304,3 @@ def train(
     print("Best trial:", study.best_trial.number)
     print("Best value (acc):", study.best_value)
     print("Best params:", study.best_trial.params)
-
-    return study
