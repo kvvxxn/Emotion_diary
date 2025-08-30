@@ -1,17 +1,24 @@
 import os
 import sys
 import torch
-import numpy
+import numpy as np
 import optuna
 import random 
 import pandas as pd
+from transformers import BertTokenizer
 from torch.utils.data import DataLoader
 
 # 절대 경로 설정 -> TEAM_PROJECT 폴더로 이동
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # Image_emo 폴더에서 불러오기 - Iamge model setting
 from image_emo.utils.label_matching import fix_label
-from shared.path import DATA_ROOT
+from shared.path import DATA_ROOT, BEST_MODEL_ROOT
+
+# 토크나이저 초기화
+tokenizer = BertTokenizer.from_pretrained("bert-base-multilingual-cased")
+
+# fusion_head 경로 저장용
+best_model_path = []
 
 # Image Dataset의 Label에 맞는 Text data를 임의로 가져옴
 # Train / Val / Test에 맞춰서 엑셀 파일 분리 해놓음
@@ -69,21 +76,43 @@ def make_text_dataset(image_label, phase):
 
 # Optuna: 최적의 Hyperparameter를 자동으로 찾아주는 API
 # 2 Layer 같이 얕은 모델에선 그리 느리지않아서 주로 사용한다고 함. 
-def objective(model, trial, img_train_loader, img_val_loader, img_model, text_model, criterion, device):
+def objective(
+        trial, 
+        img_train_loader: DataLoader, 
+        img_val_loader: DataLoader, 
+        head, 
+        img_model, 
+        text_model, 
+        criterion, 
+        tokenizer,
+        device: torch.device, 
+        num_classes: int, 
+        epochs: int,
+):
+    # 아래 범위 내에서 가장 좋은 Hyperparamter를 탐색함.
     hidden_dim   = trial.suggest_categorical("hidden_dim", [16, 32, 64, 128])
     dropout      = trial.suggest_float("dropout", 0.0, 0.5)
     batchnorm    = trial.suggest_categorical("batchnorm", [False, True])
     lr           = trial.suggest_float("lr", 1e-4, 5e-3, log=True)
     wd           = trial.suggest_float("weight_decay", 1e-6, 1e-2, log=True)
-    epochs       = 30
+    
+    # 2 Layer MLP 세팅
+    fc_model = head(hidden_dim, num_classes, dropout, batchnorm).to(device)
+    optimizer = torch.optim.Adam(fc_model.parameters(), lr=lr, weight_decay=wd)
 
-    model = model(hidden_dim, 7, dropout, batchnorm)
-    optimizer = torch.optim.Adam(model.parameters(), lr, wd)
-    criterion = criterion
+    best_acc = 0.0
 
-    for i in range(epochs):
-        # Training
-        model.train()
+    # Training
+    for epoch in range(1, epochs+1):
+        # Image 모델과 Text 모델은 평가 모드로 설정
+        img_model.eval()
+        text_model.eval()
+        # 훈련 모드로 설정
+        fc_model.train()
+
+        train_loss = 0.0
+
+        # Image Batch (size: 16)에 맞춰서 진행
         for i, data in enumerate(img_train_loader):
             # Image data['image'] shape: [16, 3, 224, 224]
             img_data = data['image'].to(device)
@@ -95,24 +124,45 @@ def objective(model, trial, img_train_loader, img_val_loader, img_model, text_mo
             targets = fix_label(img_labels).to(device) # (16, )
 
             text_data = make_text_dataset(targets, 'train')
+            
+            # 텍스트 데이터 토크나이징
+            encoding = tokenizer(
+                text_data,
+                truncation=True,
+                padding='max_length',
+                max_length=128,
+                return_tensors='pt'
+            )
+            input_ids = encoding['input_ids'].to(device)
+            attention_mask = encoding['attention_mask'].to(device)
 
-            img_output = img_model(img_data)
-            text_output = text_model(text_data)
+            with torch.no_grad():
+                # 7 element vector가 각각 반환됨
+                img_output = img_model(img_data)
+                text_output = text_model(input_ids, attention_mask)
+            
+            # logits 형태로 return
+            outputs = fc_model.forward(img_output, text_output)
 
-            output = model.forward(img_data, text_data)
+            optimizer.zero_grad()
 
             # Target: Dataloader 구성할 때 사용
-            loss = criterion(output, targets)
+            loss = criterion(outputs, targets)
+            train_loss += loss.item()
             loss.backward()
 
             optimizer.step()
-            optimizer.zero_grad()
 
+        train_loss /= (i+1)
 
-        # Validaion
-        model.eval()
+        # Validation
+        fc_model.eval()
         with torch.no_grad():
-            for i, data in enumerate(img_val_loader):
+            # Validation 정확도 측정
+            acc = 0.0
+            val_loss = 0.0
+                
+            for j, data in enumerate(img_val_loader):
                 # Image data['image'] shape: [16, 3, 224, 224]
                 img_data = data['image'].to(device)
 
@@ -123,22 +173,137 @@ def objective(model, trial, img_train_loader, img_val_loader, img_model, text_mo
                 targets = fix_label(img_labels).to(device) # (16, )
 
                 text_data = make_text_dataset(targets, 'val')
+                
+                # 텍스트 데이터 토크나이징
+                encoding = tokenizer(
+                    text_data,
+                    truncation=True,
+                    padding='max_length',
+                    max_length=128,
+                    return_tensors='pt'
+                )
+                input_ids = encoding['input_ids'].to(device)
+                attention_mask = encoding['attention_mask'].to(device)
 
                 img_output = img_model(img_data)
-                text_output = text_model(text_data)
+                text_output = text_model(input_ids, attention_mask)
 
-                output = model.forward(img_data, text_data)
+                outputs = fc_model.forward(img_output, text_output)
 
                 # Target: Dataloader 구성할 때 사용
-                loss = criterion(output, targets)
+                loss = criterion(outputs, targets)
+
+                val_loss += loss.item()
+
+                pred_cls = torch.argmax(outputs, dim = 1)
+                mask = (pred_cls == targets).float()
+                acc += 100 * (torch.sum(mask).item() / targets.size(0))
+            
+            # 전체 Batch에 대한 평균값을 계산
+            val_loss /= (j + 1)
+            acc /= (j + 1)
+
+        if epoch % 5 == 0:
+            print("--------------------------------------------------------")
+            print(f'Epoch: {epoch}\'s train loss is {train_loss:.4f}')
+            print(f'Epoch: {epoch}\'s validation loss is {val_loss:.4f}')
+            print(f'Epoch: {epoch}\'s accuracy is {acc:.4f}')
+            print("--------------------------------------------------------")
+            print()
 
         # Epoch마다 가장 좋은 모델을 저장하도록 유도
         # 평가 기준은 Accuracy
-
-        trial.report(acc, i)
+        trial.report(acc, epoch)
         if trial.should_prune():
             raise optuna.TrialPruned() # Pruning을 통해 빠르게 학습 종료
-        
 
-def train(img_train_loader, img_val_loader, mlp, img_model, text_model, criterion, device):
-    objective(mlp, trial, img_train_loader, img_val_loader, img_model, text_model, criterion, device)
+        # 전체 Epoch에서 Best_acc를 구함
+        # best_acc인 경우, Hyperparameter와 Model weight를 저장
+        if (acc > best_acc):
+            best_acc = acc
+
+            ckpt = {
+                "model_state": fc_model.state_dict(),
+                "hparams": {"hidden_dim": hidden_dim, "batchnorm": batchnorm, "dropout": dropout},
+                "meta": {"trial": int(trial.number), "val_acc": float(acc)}
+            }
+            path = os.path.join(BEST_MODEL_ROOT, f'fusion_head_model_{trial.number}.pt')
+            torch.save(ckpt, path)  
+            best_model_path.append(path)
+
+        
+    print()
+    print(f'Best accuracy across epochs: {best_acc:.4f}')
+    print()
+    
+    return best_acc
+
+
+def train(
+        img_train_loader: DataLoader, 
+        img_val_loader: DataLoader,
+        mlp, 
+        img_model, 
+        text_model, 
+        criterion, 
+        device: torch.device,
+        direction: str,
+        n_trials: int,
+        num_classes: int = 7,
+        epochs: int = 10,
+):
+    best_acc = 0.0
+
+    torch.manual_seed(42)
+    np.random.seed(42)
+    random.seed(42)
+
+    # direction: maximize
+    # best_acc가 최대가 되도록 하는 Hyperparameter를 찾음
+    study = optuna.create_study(
+        direction=direction,
+        pruner = optuna.pruners.HyperbandPruner(
+            min_resource=1,
+            max_resource=10,  
+            # 가장 높은 Trial을 Filtering
+            reduction_factor=3
+        )
+    ) 
+
+
+    study.optimize(
+        lambda trial: objective(
+            trial,
+            img_train_loader,
+            img_val_loader,
+            mlp,
+            img_model,
+            text_model,
+            criterion,
+            tokenizer,
+            device,
+            num_classes,
+            epochs,
+            best_acc
+        ),
+        n_trials=n_trials
+    )
+
+    global_best_acc = 0.0
+
+    for path in best_model_path:
+        ckpt = torch.load(path, map_location="cpu")
+        acc = ckpt.get("meta", {}).get("val_acc", None)
+
+        if acc > global_best_acc:
+            global_best_acc = acc
+
+            new_path = os.path.join(BEST_MODEL_ROOT, f'fusion_head_model.pt')
+            torch.save(ckpt, new_path)
+
+
+    print("Best trial:", study.best_trial.number)
+    print("Best value (acc):", study.best_value)
+    print("Best params:", study.best_trial.params)
+
+    return study

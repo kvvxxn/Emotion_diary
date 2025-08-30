@@ -35,6 +35,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 image_model_path = os.path.join('models', 'image_best_model.pth')
 vit, cross_entropy_loss = vit_model()
 vit.load_dict(torch.load(IMAGE_BEST_MODEL_PATH), required_grad = False)
+vit.eval()
 
 # Image Dataset 불러오기
 img_train_dataset = EmoSet(
@@ -71,6 +72,24 @@ bert.eval()
 
 # Text data는 Image batch에 맞게 Train/test 시점에 불러옴.
 
+# Best parameters 저장 경로
+BEST_PARAMS_PATH = os.path.join(SHARED_ROOT, 'best_model', 'fusion_best_params.pt')
+
 # FusionMLP를 Training + Validation
-train(img_train_loader, img_val_loader, vit, bert, cross_entropy_loss, device)
-test(img_test_loader, vit, bert)
+study = train(
+    img_train_loader, 
+    img_val_loader, 
+    FusionMLP, 
+    vit, 
+    bert, 
+    cross_entropy_loss, 
+    device,
+    direction='maximize',
+    n_trials=10,
+    num_classes=7,
+    epochs=30,
+    save_params_path=BEST_PARAMS_PATH
+)
+
+# Best hyperparameters를 사용하여 테스트
+test(img_test_loader, vit, bert, BEST_PARAMS_PATH, FusionMLP, num_classes=7)

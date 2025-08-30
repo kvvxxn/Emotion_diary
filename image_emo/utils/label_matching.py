@@ -22,16 +22,6 @@ EmoSet의 원래 8개의 감정 Label을 아래와 같이 7개의 감정 Label�
 """
 scores = torch.tensor([0, 2, 6, 0, 3, 5, 4, 1])
 
-label_to_emotion = {
-    0: 'Joy',
-    1: 'Sadness',
-    2: 'Surprise',
-    3: 'Anger',
-    4: 'Fear',
-    5: 'Disgust',
-    6: 'Neutral'
-}
-
 def fix_label(v):
     # Label Tensor를 입력받아 7개 class에 대한 점수 형식으로 반환
     answer = scores[v]

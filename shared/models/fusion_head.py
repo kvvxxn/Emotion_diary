@@ -20,9 +20,11 @@ class FusionMLP(nn.Module):
         input = torch.concatenate([img_vec, text_vec], dim=1)
 
         input = self.bn1(input)
+        
         hidden = self.fc1(input)
         hidden = self.bn2(hidden)
         hidden = F.relu(hidden, inplace=True)
+        hidden = self.dropout(hidden)
 
         output = self.fc2(hidden)
 

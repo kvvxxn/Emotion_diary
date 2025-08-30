@@ -133,8 +133,8 @@ def val(model, criterion, dataloader, device):
 
             val_loss += loss.item()
 
-            idx = torch.argmax(outputs, dim = 1)
-            mask = (idx == targets).float()
+            pred_cls = torch.argmax(outputs, dim = 1)
+            mask = (pred_cls == targets).float()
             val_acc += 100 * (torch.sum(mask).item() / targets.size(0))
 
         # 전체 Batch에 대한 평균값을 계산
@@ -157,7 +157,7 @@ def train_val(train_loader, val_loader, device):
     # 특정 Hyperparameter (lr, wd) 마다의 Validation Accuracy
     val_acc_hyper = {} # Key: (lr, wd), Value: acc
 
-
+    # Grid Search
     for lr in learning_rate:
         for wd in weight_decay:
             # Model Loading
