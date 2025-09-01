@@ -76,8 +76,7 @@ def test(img_test_loader, mlp, img_model, text_model, num_classes=7):
     text_model.eval()
     mlp.eval()
     
-    print("Using fusion model for testing")
-    
+    # Test 성능 확인용 변수 세팅
     total_correct = 0
     total_samples = 0
     
@@ -117,5 +116,5 @@ def test(img_test_loader, mlp, img_model, text_model, num_classes=7):
     
     accuracy = (total_correct / total_samples) * 100
     print(f"Test Accuracy: {accuracy:.2f}%")
-    
-    return accuracy
+
+    return 0

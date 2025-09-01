@@ -61,14 +61,10 @@ img_test_dataset = EmoSet(
 )
 img_test_loader = DataLoader(img_test_dataset, batch_size=16, shuffle=False)
 
-
-######################################################
-# TODO: Text Model 불러오기 / 변수명: 또는 bert
+# Text model 불러옴
 bert = EmotionClassifier()
 bert.load_state_dict(torch.load(TEXT_BEST_MODEL_PATH))
 bert.to(device)
-bert.eval()
-######################################################
 
 # Text data는 Image batch에 맞게 Train/test 시점에 불러옴.
 
@@ -82,7 +78,7 @@ study = train(
 )
 
 # Best fusion model 로딩
-fusion_model_path = os.path.join(BEST_MODEL_ROOT, 'fusion_head_model.pt')
+fusion_model_path = os.path.join(BEST_MODEL_ROOT, 'fusion_head_best_model.pt')
 ckpt = torch.load(fusion_model_path, map_location="cpu")
 hparams = ckpt["hparams"]
 

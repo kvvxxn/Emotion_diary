@@ -297,7 +297,7 @@ def train(
         if acc > global_best_acc:
             global_best_acc = acc
 
-            new_path = os.path.join(BEST_MODEL_ROOT, f'fusion_head_model.pt')
+            new_path = os.path.join(BEST_MODEL_ROOT, f'fusion_head_best_model.pt')
             torch.save(ckpt, new_path)
 
 
