@@ -4,17 +4,23 @@ import torch
 from transformers import BertTokenizer
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from shared.datasets.text_emoset import EmotionDataset
-from shared.models.emotion_classifier import EmotionClassifier
+from shared.models.text_emotion_classifier import EmotionClassifier
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(CURRENT_DIR)  # combine 상위
 SHARED_ROOT = os.path.join(PROJECT_ROOT, 'shared')
 TEXT_BEST_MODEL_PATH = os.path.join(SHARED_ROOT, 'best_model', 'text_best_model.pt')
 
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'recommender','emo_to_color')))
+
+from visualization import visualize_from_probs
+
+
 # 모델 준비
 model = EmotionClassifier(num_labels=7)
-model.load_state_dict(torch.load(TEXT_BEST_MODEL_PATH), map_location=torch.device('cpu'))
+state_dict = torch.load(TEXT_BEST_MODEL_PATH, map_location=torch.device('cpu'))
+model.load_state_dict(state_dict)
 model.eval()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = model.to(device)
@@ -39,3 +45,5 @@ with torch.no_grad():
     logits = model(input_ids, attention_mask)
     probs = torch.sigmoid(logits)
     print("모델 예측:", probs)
+
+visualize_from_probs(probs[0])

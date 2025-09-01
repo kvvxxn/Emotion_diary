@@ -1,5 +1,5 @@
 import numpy as np
-from recommender.emo_to_color.color_matching import EMOTION_COLOR_MAP, EMOTION_LABELS
+from color_matching import EMOTION_COLOR_MAP, EMOTION_LABELS
 
 def recommend_emotion_colors(emotion_vector, method='mix'):
     """
