@@ -46,6 +46,11 @@ def main():
     best_model_path = None
 
     # 1. 데이터 로드
+    '''
+    train_df = pd.read_excel(os.path.join(DATA_DIR, 'train_text.xlsx'))
+    val_df = pd.read_excel(os.path.join(DATA_DIR, 'val_text.xlsx'))
+    test_df = pd.read_excel(os.path.join(DATA_DIR, 'test_text.xlsx'))
+    '''
     train_df, val_df, test_df = split_data(os.path.join(DATA_DIR, '한국어_단발성_대화_데이터셋.xlsx'))
     
     # Ensure 'Sentence' column is string type
