@@ -34,7 +34,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # Image Model 불러오기
 image_model_path = os.path.join('models', 'image_best_model.pth')
 vit, cross_entropy_loss = vit_model()
-vit.load_dict(torch.load(IMAGE_BEST_MODEL_PATH), required_grad = False)
+vit.load_state_dict(torch.load(IMAGE_BEST_MODEL_PATH), required_grad = False)
 vit.eval()
 
 # Image Dataset 불러오기
