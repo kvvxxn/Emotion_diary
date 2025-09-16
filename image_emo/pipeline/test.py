@@ -11,7 +11,7 @@ from utils.label_matching import fix_label
 
 def test(dataloader, device, visualize=False, num_visualize=6):
     vit, cross_entropy_loss = vit_model()
-    vit.load_state_dict(torch.load('best_model.pth')) # main.py에서 실행했을 때 기준 파일
+    vit.load_state_dict(torch.load('image_best_model.pth')) # main.py에서 실행했을 때 기준 파일
 
     # 평가 모드로 설정
     vit.eval()
