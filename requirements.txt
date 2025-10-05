@@ -1,0 +1,10 @@
+numpy
+pillow
+pandas
+openpyxl
+tqdm
+optuna
+transformers
+timm
+torch
+torchvision
