@@ -25,3 +25,7 @@
 Colab 환경에서 모델 학습을 진행하였기 때문에, **GitHub 저장소의 폴더 및 파일 경로**가 실제 환경과 다를 수 있습니다.  
 
 *실행 전 경로를 반드시 확인하세요.*
+
+## 어플리케이션
+
+[https://diary-web-qyme.vercel.app/](https://diary-web-qyme.vercel.app/)
