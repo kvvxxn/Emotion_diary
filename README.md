@@ -29,3 +29,8 @@ Colab 환경에서 모델 학습을 진행하였기 때문에, **GitHub 저장�
 ## 어플리케이션
 
 [https://diary-web-qyme.vercel.app/](https://diary-web-qyme.vercel.app/)
+
+## TODO
+
+1. 모델 구조 수정 및 성능 개선
+2. 더 좋은 데이터 수집 후 Re-training
