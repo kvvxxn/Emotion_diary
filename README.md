@@ -1,5 +1,3 @@
-# Team_project
-
 **`팀원`**: 권도현, 이준현, 서교빈, 정환
 
 **`시작일`**: 2025-07-04
@@ -8,7 +6,7 @@
 ## 아이디어
 
 > **AI 감정 인식 일기장**
-> 🤖 사진/텍스트를 기반으로 감정을 파악하고, 음악 추천 및 기록해주는 웹 사이트 
+> 🤖 사진/텍스트를 기반으로 감정을 파악하고 기록해주는 웹 사이트 
 
 
 ## 기능
@@ -17,14 +15,26 @@
 
 > 📈 **감정 추세 그래프**	주/월/년 단위 감정 변화 트렌드 보기
 
-> 🔮 **음악 추천**   	    일기, 사진 기반 음악 추천
+
+## 모델
+
+**Text Encoder**
+
+- `Model`: BERT (Bidirectional Encoder Representations from Transformers)
+
+**Image Encoder**
+
+- `Model`: ViT (Vision Transformer)
+
+**Fusion Layer**
+
+- `Mechanism`: 두 인코더에서 나온 고차원 특징 벡터를 Late Fusion 방식으로 결합.
+
+**Classification**
+
+- 결합된 벡터를 Fully Connected Layer에 통과시켜 최종 7가지 감정에 대한 확률 값을 도출.
 
 
-## ⚠️ **주의**  
-
-Colab 환경에서 모델 학습을 진행하였기 때문에, **GitHub 저장소의 폴더 및 파일 경로**가 실제 환경과 다를 수 있습니다.  
-
-*실행 전 경로를 반드시 확인하세요.*
 
 ## 어플리케이션
 
